@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /nova1/
+    
+    # Remove .php extension
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}\.php -f
+    RewriteRule ^([^\.]+)$ $1.php [NC,L]
+    
+    # Handle requests to files with .php extension - redirect to clean URL
+    RewriteCond %{REQUEST_URI} \.(php)$
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^(.*)\.php$ /$1 [R=301,L]
+    
+</IfModule>
