@@ -1,0 +1,112 @@
+workflows:
+  ios-debug-build:
+    name: iOS Debug Build
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "com.recyclingpaperarts.app"
+        APP_NAME: "Recycling Paper Arts"
+    scripts:
+      - name: Set up code signing
+        script: |
+          echo "Setting up code signing settings..."
+          # For debug builds, we'll use automatic signing
+          # For release builds, you'll need to configure certificates and provisioning profiles
+      - name: Build iOS Debug
+        script: |
+          cd iOS-App
+          xcodebuild -project RecyclingPaperArts.xcodeproj \
+            -scheme RecyclingPaperArts \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build/derived \
+            clean build
+    artifacts:
+      - iOS-App/build/derived/Build/Products/Debug-iphonesimulator/*.app
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
+
+  ios-release-build:
+    name: iOS Release Build
+    instance_type: mac_mini_m1
+    max_build_duration: 120
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "com.recyclingpaperarts.app"
+        APP_NAME: "Recycling Paper Arts"
+    scripts:
+      - name: Set up code signing
+        script: |
+          echo "Setting up code signing for release..."
+          # Import certificates and provisioning profiles
+          # You'll need to add your certificates to Codemagic environment variables
+          # See: https://docs.codemagic.io/code-signing-yaml/signing-ios/
+      - name: Build iOS Release
+        script: |
+          cd iOS-App
+          xcodebuild -project RecyclingPaperArts.xcodeproj \
+            -scheme RecyclingPaperArts \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build/derived \
+            clean build
+      - name: Create IPA
+        script: |
+          cd iOS-App/build/derived/Build/Products/Release-iphoneos
+          mkdir -p Payload
+          cp -r RecyclingPaperArts.app Payload/
+          zip -r RecyclingPaperArts.ipa Payload
+          mv RecyclingPaperArts.ipa ../../../
+    artifacts:
+      - iOS-App/RecyclingPaperArts.ipa
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
+      # Uncomment below to publish to App Store Connect
+      # app_store_connect:
+      #   api_key: $APP_STORE_CONNECT_API_KEY
+      #   key_id: $APP_STORE_CONNECT_KEY_ID
+      #   issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+      #   submit_to_testflight: true
+      #   beta_groups:
+      #     - Beta Testers
+
+  ios-test:
+    name: iOS Tests
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+    scripts:
+      - name: Run iOS Tests
+        script: |
+          cd iOS-App
+          xcodebuild -project RecyclingPaperArts.xcodeproj \
+            -scheme RecyclingPaperArts \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            test
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
